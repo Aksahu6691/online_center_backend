@@ -1,6 +1,13 @@
-import { Entity, Column, ObjectIdColumn, BeforeInsert } from "typeorm";
+import {
+  Entity,
+  Column,
+  ObjectIdColumn,
+  BeforeInsert,
+  ManyToOne,
+} from "typeorm";
 import { ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
+import { Users } from "../user/user.model";
 
 @Entity("blogs")
 export class Blog {
@@ -22,8 +29,8 @@ export class Blog {
   @Column({ type: "timestamp" })
   uploadedDate!: Date;
 
-  @Column({ type: "varchar", length: 255 }) // Removed `unique: true`
-  author!: string; // Should store a User ID
+  @ManyToOne(() => Users, (user) => user.id, { nullable: false })
+  author!: Users; // Reference the Users entity
 
   @BeforeInsert()
   generateId() {

@@ -32,6 +32,9 @@ export class Users {
   @Column({ type: "varchar", length: 50 })
   role!: string; // e.g., 'admin', 'user'
 
+  @Column({ type: "varchar", length: 255 })
+  designation!: string;
+
   @Column({ type: "text", nullable: true })
   description?: string | null;
 

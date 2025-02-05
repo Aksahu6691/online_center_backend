@@ -6,7 +6,12 @@ import express, {
   urlencoded,
 } from "express";
 import cors from "cors";
-import { serviceRoutes, testimonialRoutes, userRoutes } from "./api";
+import {
+  blogRoutes,
+  serviceRoutes,
+  testimonialRoutes,
+  userRoutes,
+} from "./api";
 import path from "path";
 
 const app = express();
@@ -33,6 +38,7 @@ app.use(express.static(path.join(__dirname, "../public"))); // enable static fol
 app.use("/api/user", userRoutes);
 app.use("/api/service", serviceRoutes);
 app.use("/api/testimonial", testimonialRoutes);
+app.use("/api/blog", blogRoutes);
 
 // If not found api then give message
 app.all("*", (req: Request, res: Response, next: NextFunction) => {

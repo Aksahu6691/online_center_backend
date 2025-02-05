@@ -13,7 +13,7 @@ const blogRoutes = express.Router();
 blogRoutes
   .post("/add", upload.single("image"), addBlog)
   .get("/get", getBlogs)
-  .get("/getById/:id", getBlogById)
+  .get("/get/:id", getBlogById)
   .patch("/update/:id", upload.single("image"), updateBlog)
   .delete("/delete/:id", deleteBlog);
 

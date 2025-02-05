@@ -8,8 +8,16 @@ const userRepository = AppDataSource.getRepository(Users);
 
 export const addUser = async (req: Request, res: Response) => {
   try {
-    const { name, mobile, email, password, role, description, status } =
-      req.body;
+    const {
+      name,
+      mobile,
+      email,
+      password,
+      role,
+      designation,
+      description,
+      status,
+    } = req.body;
 
     let photo = null;
 
@@ -38,6 +46,7 @@ export const addUser = async (req: Request, res: Response) => {
     newUser.password = password; // Will be hashed automatically
     newUser.photo = photo;
     newUser.role = role || "user";
+    newUser.designation = designation;
     newUser.description = description || null;
     newUser.status = status !== undefined ? status : true;
     newUser.passwordUpdatedAt = new Date();
@@ -104,8 +113,16 @@ export const getUser = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, mobile, email, role, description, status, password } =
-      req.body;
+    const {
+      name,
+      mobile,
+      email,
+      role,
+      designation,
+      description,
+      status,
+      password,
+    } = req.body;
 
     // Find user by ID
     const user = await userRepository.findOne({ where: { id } });
@@ -130,6 +147,7 @@ export const updateUser = async (req: Request, res: Response) => {
     user.email = email ?? user.email;
     user.photo = photo ?? user.photo;
     user.role = role ?? user.role;
+    user.designation = designation ?? user.designation;
     user.description = description ?? user.description;
     user.status = status !== undefined ? status : user.status;
     user.password = password ?? user.password;

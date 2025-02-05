@@ -47,11 +47,34 @@ export const getBlogs = async (req: Request, res: Response) => {
     const pageNumber = parseInt(page as string) || 1;
     const pageSize = parseInt(limit as string) || 10;
 
+    // Fetch blogs with author relation
     const [blogs, total] = await blogRepository.findAndCount({
       skip: (pageNumber - 1) * pageSize,
       take: pageSize,
       order: { uploadedDate: "DESC" },
+      relations: ["author"], // 👈 Ensure the author relation is fetched
     });
+
+    // Check if blogs are being retrieved correctly
+    if (!blogs.length) {
+      res.status(404).json({ error: "No blogs found" });
+    }
+
+    // Format blogs with author details
+    const formattedBlogs = blogs.map((blog) => ({
+      id: blog.id,
+      title: blog.title,
+      description: blog.description,
+      image: blog.image,
+      uploadedDate: blog.uploadedDate,
+      author: blog.author
+        ? {
+            id: blog.author.id,
+            name: blog.author.name,
+            designation: blog.author.designation,
+          }
+        : null,
+    }));
 
     const totalPages = Math.ceil(total / pageSize);
     const hasMore = pageNumber < totalPages;
@@ -62,7 +85,7 @@ export const getBlogs = async (req: Request, res: Response) => {
       totalPages,
       currentPage: pageNumber,
       hasMore,
-      blogs,
+      blogs: formattedBlogs,
     });
   } catch (error: any) {
     log.error("Error retrieving blogs:", error.message);
