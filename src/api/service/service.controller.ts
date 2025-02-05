@@ -104,19 +104,17 @@ export const updateService = async (req: Request, res: Response) => {
       throw new Error("Service not found");
     }
 
-    let image = service.image;
+    service.title = title ?? service.title;
+    service.description = description ?? service.description;
+
     if (req.file) {
-      image = `images/${req.file.filename}`;
       try {
         await fs.promises.unlink(`public/${service.image}`);
       } catch (error) {
         log.error("Error deleting service image:", error);
       }
+      service.image = `images/${req.file.filename}`;
     }
-
-    service.title = title ?? service.title;
-    service.description = description ?? service.description;
-    service.image = image;
 
     const updatedService = await serviceRepository.save(service);
 

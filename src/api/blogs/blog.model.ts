@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
 
 @Entity("blogs")
-export class Blogs {
+export class Blog {
   @ObjectIdColumn()
   _id!: ObjectId;
 
@@ -22,11 +22,16 @@ export class Blogs {
   @Column({ type: "timestamp" })
   uploadedDate!: Date;
 
-  @Column({ type: "varchar", length: 255, unique: true })
-  author!: string;
+  @Column({ type: "varchar", length: 255 }) // Removed `unique: true`
+  author!: string; // Should store a User ID
 
   @BeforeInsert()
   generateId() {
     this.id = uuidv4();
+  }
+
+  @BeforeInsert()
+  setUploadedDate() {
+    this.uploadedDate = new Date();
   }
 }
