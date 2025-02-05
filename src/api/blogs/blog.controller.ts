@@ -3,6 +3,7 @@ import { AppDataSource } from "../../config/database.config";
 import log from "../../utils/logger";
 import { Blog } from "./blog.model";
 import fs from "fs";
+import environmentConfig from "../../config/environment.config";
 
 const blogRepository = AppDataSource.getRepository(Blog);
 
@@ -52,7 +53,7 @@ export const getBlogs = async (req: Request, res: Response) => {
       skip: (pageNumber - 1) * pageSize,
       take: pageSize,
       order: { uploadedDate: "DESC" },
-      relations: ["author"], // 👈 Ensure the author relation is fetched
+      relations: ["author"],
     });
 
     // Check if blogs are being retrieved correctly
@@ -65,7 +66,7 @@ export const getBlogs = async (req: Request, res: Response) => {
       id: blog.id,
       title: blog.title,
       description: blog.description,
-      image: blog.image,
+      image: `${environmentConfig.app.apiUrl}/${blog.image}`,
       uploadedDate: blog.uploadedDate,
       author: blog.author
         ? {
@@ -85,7 +86,7 @@ export const getBlogs = async (req: Request, res: Response) => {
       totalPages,
       currentPage: pageNumber,
       hasMore,
-      blogs: formattedBlogs,
+      data: formattedBlogs,
     });
   } catch (error: any) {
     log.error("Error retrieving blogs:", error.message);
@@ -103,7 +104,12 @@ export const getBlogById = async (req: Request, res: Response) => {
       throw new Error("Blog not found");
     }
 
-    res.status(200).json(blog);
+    res.status(200).json({
+      data: {
+        ...blog,
+        image: `${environmentConfig.app.apiUrl}/${blog.image}`,
+      },
+    });
   } catch (error: any) {
     log.error("Error retrieving blog:", error.message);
     res.status(500).json({ error: error.message });

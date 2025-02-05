@@ -3,6 +3,7 @@ import { AppDataSource } from "../../config/database.config";
 import log from "../../utils/logger";
 import { Users } from "./user.model";
 import fs from "fs";
+import environmentConfig from "../../config/environment.config";
 
 const userRepository = AppDataSource.getRepository(Users);
 
@@ -82,6 +83,7 @@ export const getUser = async (req: Request, res: Response) => {
       if (!user) {
         throw new Error("User not found");
       }
+      user = `${environmentConfig.app.apiUrl}/${user.photo}`;
       currentDataSize = 1;
       totalDataSize = 1;
       totalPages = 1;
@@ -90,6 +92,11 @@ export const getUser = async (req: Request, res: Response) => {
         skip,
         take: limit,
       });
+
+      user = user.map((user) => ({
+        ...user,
+        photo: `${environmentConfig.app.apiUrl}/${user.photo}`,
+      }));
 
       currentDataSize = user.length;
       totalPages = Math.ceil(totalDataSize / limit);

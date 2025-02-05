@@ -3,6 +3,7 @@ import { AppDataSource } from "../../config/database.config";
 import log from "../../utils/logger";
 import { Services } from "./service.model";
 import fs from "fs";
+import environmentConfig from "../../config/environment.config";
 
 const serviceRepository = AppDataSource.getRepository(Services);
 
@@ -65,6 +66,11 @@ export const getService = async (req: Request, res: Response) => {
       if (!service) {
         throw new Error("Service not found");
       }
+      service = {
+        ...service,
+        image: `${environmentConfig.app.apiUrl}/${service.image}`,
+      };
+      console.log("service", service);
       currentDataSize = 1;
       totalDataSize = 1;
       totalPages = 1;
@@ -77,6 +83,11 @@ export const getService = async (req: Request, res: Response) => {
       currentDataSize = service.length;
       totalPages = Math.ceil(totalDataSize / limit);
       hasMore = page < totalPages;
+
+      service = service.map((s) => ({
+        ...s,
+        image: `${environmentConfig.app.apiUrl}/${s.image}`,
+      }));
     }
 
     res.status(200).json({
