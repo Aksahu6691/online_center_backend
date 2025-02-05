@@ -4,10 +4,12 @@ import {
   BeforeInsert,
   BeforeUpdate,
   ObjectIdColumn,
+  OneToMany,
 } from "typeorm";
 import bcrypt from "bcrypt";
 import { ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
+import { Blog } from "../blogs/blog.model";
 
 @Entity("users")
 export class Users {
@@ -46,6 +48,9 @@ export class Users {
 
   @Column({ type: "timestamp", nullable: true })
   passwordUpdatedAt?: Date | null;
+
+  @OneToMany(() => Blog, (blog) => blog.author)
+  blogs!: Blog[];
 
   @BeforeInsert()
   generateId() {
