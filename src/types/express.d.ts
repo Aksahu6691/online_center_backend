@@ -1,7 +1,7 @@
-import { User } from "../api/user/UserModel";
+import { Users } from "../api/user/user.model";
 
-declare namespace Express {
-    interface Request {
-        user?: User | string;
-    }
+declare module "express-serve-static-core" {
+  interface Request {
+    user?: Users;
+  }
 }

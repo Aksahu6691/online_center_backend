@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/database.config";
-import { User } from "../api/user/user.model";
 import env from "../config/environment.config";
+import { Users } from "../api/user/user.model";
 
 export const protect: RequestHandler = async (
   req: Request,
@@ -10,7 +10,7 @@ export const protect: RequestHandler = async (
   next: NextFunction
 ) => {
   try {
-    const userRepository = AppDataSource.getRepository(User);
+    const userRepository = AppDataSource.getRepository(Users);
 
     // 1. Read the token from the authorization header
     const authHeader = req.headers.authorization;

@@ -65,7 +65,7 @@ export const getTestimonials = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({
-      data: testimonial,
+      testimonials: testimonial,
       currentDataSize,
       totalDataSize,
       totalPages,

@@ -86,7 +86,7 @@ export const getBlogs = async (req: Request, res: Response) => {
       totalPages,
       currentPage: pageNumber,
       hasMore,
-      data: formattedBlogs,
+      blogs: formattedBlogs,
     });
   } catch (error: any) {
     log.error("Error retrieving blogs:", error.message);
@@ -105,10 +105,8 @@ export const getBlogById = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({
-      data: {
-        ...blog,
-        image: `${environmentConfig.app.apiUrl}/${blog.image}`,
-      },
+      ...blog,
+      image: `${environmentConfig.app.apiUrl}/${blog.image}`,
     });
   } catch (error: any) {
     log.error("Error retrieving blog:", error.message);

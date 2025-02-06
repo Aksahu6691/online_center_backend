@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { AppDataSource } from "../../config/database.config";
 import { Users } from "./user.model";
+import environmentConfig from "../../config/environment.config";
 
 const userRepository = AppDataSource.getRepository(Users);
 
@@ -43,7 +44,7 @@ export const userLogin: RequestHandler = async (
 
     // 5. Generate a JWT token
     const token = jwt.sign({ id: user.id }, process.env.SECRETE_KEY as string, {
-      expiresIn: "1h",
+      expiresIn: "1d",
     });
 
     // 6. Return success response with the token
@@ -54,7 +55,38 @@ export const userLogin: RequestHandler = async (
         id: user.id,
         name: user.name,
         email: user.email,
+        photo: `${environmentConfig.app.apiUrl}/${user.photo}`,
+        role: user.role,
+        designation: user.designation,
+        status: user.status,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const VerifyLogin: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // console.log("req.user", req.user);
+
+    // 6. Return success response with the token
+    res.status(200).json({
+      message: "Login successful",
+      // token,
+      // user: {
+      //   id: user.id,
+      //   name: user.name,
+      //   email: user.email,
+      //   photo: `${environmentConfig.app.apiUrl}/${user.photo}`,
+      //   role: user.role,
+      //   designation: user.designation,
+      //   status: user.status,
+      // },
     });
   } catch (error) {
     next(error);

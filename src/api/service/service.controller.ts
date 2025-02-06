@@ -91,7 +91,7 @@ export const getService = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({
-      data: service,
+      services: service,
       currentDataSize,
       totalDataSize,
       totalPages,
