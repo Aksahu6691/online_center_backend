@@ -1,8 +1,8 @@
 import express from "express";
 import { addUser, deleteUser, getUser, updateUser } from "./user.controller";
-import { userLogin, VerifyLogin } from "./user.creadential";
 import { upload } from "../../utils/fileUpload";
 import { protect } from "../../middleware/authentication";
+import { userLogin, VerifyLogin } from "./user.credentials";
 
 const userRoutes = express.Router();
 
@@ -12,6 +12,6 @@ userRoutes
   .patch("/update/:id", upload.single("photo"), updateUser)
   .delete("/delete/:id", deleteUser)
   .post("/login", userLogin)
-  .post("/verify-login", protect, VerifyLogin); // TODO: Will do later
+  .post("/verify-login", VerifyLogin);
 
 export default userRoutes;

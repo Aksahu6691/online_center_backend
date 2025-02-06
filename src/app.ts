@@ -29,7 +29,6 @@ app.use(
     credentials: true,
   })
 );
-// app.use(cors());
 app.use(json());
 app.use(urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../public"))); // enable static folder
