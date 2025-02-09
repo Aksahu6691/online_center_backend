@@ -70,7 +70,6 @@ export const getService = async (req: Request, res: Response) => {
         ...service,
         image: `${environmentConfig.app.apiUrl}/${service.image}`,
       };
-      console.log("service", service);
       currentDataSize = 1;
       totalDataSize = 1;
       totalPages = 1;

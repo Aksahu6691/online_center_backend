@@ -106,8 +106,6 @@ export const VerifyLogin: RequestHandler = async (
       where: { id: decodedToken.id },
     });
 
-    console.log("user", user);
-
     if (!user) {
       res
         .status(404)
