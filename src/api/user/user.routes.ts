@@ -9,8 +9,8 @@ const userRoutes = express.Router();
 userRoutes
   .post("/add", upload.single("photo"), addUser)
   .get("/get/:id?", protect, getUser)
-  .patch("/update/:id", upload.single("photo"), updateUser)
-  .delete("/delete/:id", deleteUser)
+  .patch("/update/:id", protect, upload.single("photo"), updateUser)
+  .delete("/delete/:id", protect, deleteUser)
   .post("/login", userLogin)
   .post("/verify-login", VerifyLogin);
 

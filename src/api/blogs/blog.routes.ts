@@ -7,14 +7,15 @@ import {
   updateBlog,
 } from "./blog.controller";
 import { upload } from "../../utils/fileUpload";
+import { protect } from "../../middleware/authentication";
 
 const blogRoutes = express.Router();
 
 blogRoutes
-  .post("/add", upload.single("image"), addBlog)
-  .get("/get", getBlogs)
-  .get("/get/:id", getBlogById)
-  .patch("/update/:id", upload.single("image"), updateBlog)
-  .delete("/delete/:id", deleteBlog);
+  .post("/add", protect, upload.single("image"), addBlog)
+  .get("/get", protect, getBlogs)
+  .get("/get/:id", protect, getBlogById)
+  .patch("/update/:id", protect, upload.single("image"), updateBlog)
+  .delete("/delete/:id", protect, deleteBlog);
 
 export default blogRoutes;

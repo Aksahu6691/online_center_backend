@@ -16,26 +16,30 @@ const mail_1 = __importDefault(require("@sendgrid/mail"));
 const environment_config_1 = __importDefault(require("../config/environment.config"));
 const logger_1 = __importDefault(require("./logger"));
 mail_1.default.setApiKey(environment_config_1.default.email.apiKey);
-const msg = {
-    to: ['mybusiness6691@gmail.com'],
-    from: {
-        name: "Test Email",
-        email: environment_config_1.default.email.fromEmail,
-    },
-    subject: 'Sending with Twilio SendGrid is Fun',
-    text: 'and easy to do anywhere, even with Node.js',
-    html: '<strong>and easy to do anywhere, even with Node.js</strong>',
-};
-const sendEmail = () => __awaiter(void 0, void 0, void 0, function* () {
+const sendEmail = (toEmail) => __awaiter(void 0, void 0, void 0, function* () {
+    const msg = {
+        to: [`${toEmail}`],
+        from: {
+            name: "Restaurant Subscription Cunfirm",
+            email: environment_config_1.default.email.fromEmail, // Use the email address or domain you verified above
+        },
+        subject: "Welcome to online center – You’re In!",
+        // text: 'and easy to do anywhere, even with Node.js',
+        // html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+        templateId: environment_config_1.default.email.sendGridTemId,
+        dynamicTemplateData: {
+            website: "online.center.com",
+            replyEmail: "test@magureinc.com",
+        },
+    };
     try {
         yield mail_1.default.send(msg);
-        logger_1.default.info('Email has been sent!');
+        logger_1.default.info("Email has been sent!");
+        return true;
     }
     catch (error) {
         console.error(error);
-        if (error) {
-            console.error(error);
-        }
+        return false;
     }
 });
-sendEmail();
+exports.default = sendEmail;

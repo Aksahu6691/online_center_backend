@@ -12,74 +12,116 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTestimonial = exports.getTestimonial = exports.addTestimonial = void 0;
-const fs_1 = __importDefault(require("fs"));
+exports.deleteTestimonial = exports.updateTestimonial = exports.getTestimonials = exports.addTestimonial = void 0;
 const database_config_1 = require("../../config/database.config");
+const logger_1 = __importDefault(require("../../utils/logger"));
 const testimonial_model_1 = require("./testimonial.model");
-const testimonialRepository = database_config_1.AppDataSource.getRepository(testimonial_model_1.Testimonial);
+const testimonialRepository = database_config_1.AppDataSource.getRepository(testimonial_model_1.Testimonials);
+// Add a new testimonial
 const addTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { name, description, designation } = req.body;
-        let image = "";
-        if (req.file && req.file.mimetype) {
-            image = `images/${req.file.filename}`;
+        const { name, designation, message } = req.body;
+        if (!name || !designation || !message) {
+            throw new Error("Name, designation, and message are required");
         }
-        else {
-            res.status(404).json({ message: 'Image not found' });
-            return;
-        }
-        // Create a new testimonial record using the repository
-        const newTestimonial = testimonialRepository.create({
-            image,
-            name,
-            description,
-            designation
-        });
+        const newTestimonial = new testimonial_model_1.Testimonials();
+        newTestimonial.name = name;
+        newTestimonial.designation = designation;
+        newTestimonial.message = message;
         yield testimonialRepository.save(newTestimonial);
-        res.status(201).json({ message: 'Data added successfully', data: newTestimonial });
+        res.status(201).json({
+            message: "Testimonial added successfully",
+            testimonial: newTestimonial,
+        });
     }
     catch (error) {
-        res.status(500).json({ message: 'Error adding testimonial', error });
+        logger_1.default.error("Error adding testimonial:", error.message);
+        res.status(500).json({ error: error.message });
     }
 });
 exports.addTestimonial = addTestimonial;
-const getTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Get testimonials (all or single)
+const getTestimonials = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const id = req.params.id;
-        const data = id
-            ? yield testimonialRepository.findOneBy({ id })
-            : yield testimonialRepository.find({ order: { _id: 'DESC' } });
-        if (!data) {
-            res.status(404).json({ message: 'Data not found' });
-            return;
+        const { id } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        let testimonial;
+        let currentDataSize = 0;
+        let totalDataSize = 0;
+        let totalPages = 0;
+        let hasMore = false;
+        if (id) {
+            testimonial = yield testimonialRepository.findOne({ where: { id } });
+            if (!testimonial) {
+                throw new Error("Testimonial not found");
+            }
+            currentDataSize = 1;
+            totalDataSize = 1;
+            totalPages = 1;
         }
-        res.status(200).json(data);
+        else {
+            [testimonial, totalDataSize] = yield testimonialRepository.findAndCount({
+                skip,
+                take: limit,
+            });
+            currentDataSize = testimonial.length;
+            totalPages = Math.ceil(totalDataSize / limit);
+            hasMore = page < totalPages;
+        }
+        res.status(200).json({
+            testimonials: testimonial,
+            currentDataSize,
+            totalDataSize,
+            totalPages,
+            currentPage: page,
+            hasMore,
+        });
     }
     catch (error) {
-        res.status(500).json({ message: 'Error retrieving testimonial', error });
+        logger_1.default.error("Error retrieving testimonials:", error.message);
+        res.status(500).json({ error: error.message });
     }
 });
-exports.getTestimonial = getTestimonial;
+exports.getTestimonials = getTestimonials;
+// Update a testimonial
+const updateTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const { name, designation, message } = req.body;
+        const testimonial = yield testimonialRepository.findOne({ where: { id } });
+        if (!testimonial) {
+            throw new Error("Testimonial not found");
+        }
+        testimonial.name = name !== null && name !== void 0 ? name : testimonial.name;
+        testimonial.designation = designation !== null && designation !== void 0 ? designation : testimonial.designation;
+        testimonial.message = message !== null && message !== void 0 ? message : testimonial.message;
+        yield testimonialRepository.save(testimonial);
+        res
+            .status(200)
+            .json({ message: "Testimonial updated successfully", testimonial });
+    }
+    catch (error) {
+        logger_1.default.error("Error updating testimonial:", error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.updateTestimonial = updateTestimonial;
+// Delete a testimonial
 const deleteTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const data = yield testimonialRepository.findOneBy({ id });
-        if (!data) {
-            res.status(404).json({ message: 'Data not found' });
-            return;
+        const testimonial = yield testimonialRepository.findOne({ where: { id } });
+        if (!testimonial) {
+            throw new Error("Testimonial not found");
         }
-        yield testimonialRepository.delete({ id });
-        // Delete the image file from the server
-        try {
-            fs_1.default.unlinkSync(`public/${data.image}`);
-        }
-        catch (error) {
-            console.log(error);
-        }
-        res.status(200).json({ message: 'Data deleted successfully' });
+        yield testimonialRepository.remove(testimonial);
+        res.status(200).json({ message: "Testimonial deleted successfully" });
     }
     catch (error) {
-        res.status(500).json({ message: 'Error deleting Data', error });
+        logger_1.default.error("Error deleting testimonial:", error.message);
+        res.status(500).json({ error: error.message });
     }
 });
 exports.deleteTestimonial = deleteTestimonial;

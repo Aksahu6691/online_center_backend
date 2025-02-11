@@ -15,19 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.protect = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const database_config_1 = require("../config/database.config");
-const user_model_1 = require("../api/user/user.model");
 const environment_config_1 = __importDefault(require("../config/environment.config"));
+const user_model_1 = require("../api/user/user.model");
 const protect = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const userRepository = database_config_1.AppDataSource.getRepository(user_model_1.User);
+        const userRepository = database_config_1.AppDataSource.getRepository(user_model_1.Users);
         // 1. Read the token from the authorization header
         const authHeader = req.headers.authorization;
         let token;
-        if (authHeader && authHeader.startsWith('Bearer')) {
-            token = authHeader.split(' ')[1];
+        if (authHeader === null || authHeader === void 0 ? void 0 : authHeader.startsWith("Bearer")) {
+            token = authHeader.split(" ")[1];
         }
         if (!token) {
-            res.status(401).json({ message: 'You are not authenticated!' });
+            res.status(401).json({ message: "You are not authenticated!" });
             return;
         }
         // 2. Verify the token
@@ -35,10 +35,12 @@ const protect = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         // 3. Check if the user exists
         const user = yield userRepository.findOne({
             where: { id: decodedToken.id },
-            select: ['id', 'passwordUpdatedAt'],
+            select: ["id", "passwordUpdatedAt"],
         });
         if (!user) {
-            res.status(404).json({ message: 'The user with the given token does not exist' });
+            res
+                .status(404)
+                .json({ message: "The user with the given token does not exist" });
             return;
         }
         // 4. Check if the user changed the password after the token was issued
@@ -46,7 +48,7 @@ const protect = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
             const passwordChangedAt = Math.floor(user.passwordUpdatedAt.getTime() / 1000);
             if (decodedToken.iat < passwordChangedAt) {
                 res.status(401).json({
-                    message: 'The password has been changed recently. Please log in again.',
+                    message: "The password has been changed recently. Please log in again.",
                 });
                 return;
             }
@@ -56,7 +58,7 @@ const protect = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         next();
     }
     catch (error) {
-        res.status(500).json({ message: 'Internal server error', error });
+        res.status(500).json({ message: "Internal server error", error });
     }
 });
 exports.protect = protect;

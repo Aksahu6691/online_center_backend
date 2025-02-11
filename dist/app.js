@@ -15,13 +15,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -33,27 +43,26 @@ const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
     origin: function (origin, callback) {
-        const allowedOrigins = [
-            'http://localhost:5173',
-        ];
+        const allowedOrigins = ["http://localhost:4001"];
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         }
         else {
-            callback(new Error('Not allowed by CORS'));
+            callback(new Error("Not allowed by CORS"));
         }
     },
-    credentials: true
+    credentials: true,
 }));
-// app.use(cors());
 app.use((0, express_1.json)());
 app.use((0, express_1.urlencoded)({ extended: true }));
-app.use(express_1.default.static(path_1.default.join(__dirname, '../public'))); // enable static folder
-app.use('/api/dish', api_1.dishRoutes);
-app.use('/api/testimonial', api_1.testimonialRoutes);
-app.use('/api/user', api_1.userRoutes);
+app.use(express_1.default.static(path_1.default.join(__dirname, "../public"))); // enable static folder
+// Routes
+app.use("/api/user", api_1.userRoutes);
+app.use("/api/service", api_1.serviceRoutes);
+app.use("/api/testimonial", api_1.testimonialRoutes);
+app.use("/api/blog", api_1.blogRoutes);
 // If not found api then give message
-app.all('*', (req, res, next) => {
+app.all("*", (req, res, next) => {
     next(`Can't find ${req.originalUrl} on the server`);
 });
 // Error Handle

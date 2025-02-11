@@ -12,8 +12,8 @@ const serviceRoutes = express.Router();
 
 serviceRoutes
   .get("/get/:id?", protect, getService)
-  .post("/add", upload.single("image"), addService)
-  .patch("/update/:id", upload.single("image"), updateService)
-  .delete("/delete/:id", deleteService);
+  .post("/add", protect, upload.single("image"), addService)
+  .patch("/update/:id", protect, upload.single("image"), updateService)
+  .delete("/delete/:id", protect, deleteService);
 
 export default serviceRoutes;

@@ -11,9 +11,7 @@ const isLocal = environment_config_1.default.environment == constant_1.appEnv.lo
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "mongodb",
     url: environment_config_1.default.db.url,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    logging: isLocal ? 'all' : ['error', 'warn'],
-    entities: [isLocal ? 'src/**/*.model.ts' : 'build/**/*.model.js'],
+    logging: isLocal ? "all" : ["error", "warn"],
+    entities: [isLocal ? "src/**/*.model.ts" : "build/**/*.model.js"],
     synchronize: isLocal, // Set to false in production
 });
