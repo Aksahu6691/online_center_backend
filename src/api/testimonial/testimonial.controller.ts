@@ -2,10 +2,11 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../../config/database.config";
 import log from "../../utils/logger";
 import { Testimonials } from "./testimonial.model";
+import { successResponse, errorResponse } from "../../utils/apiResponse";
 
 const testimonialRepository = AppDataSource.getRepository(Testimonials);
 
-// Add a new testimonial
+// **Add a new testimonial**
 export const addTestimonial = async (req: Request, res: Response) => {
   try {
     const { name, designation, message } = req.body;
@@ -21,17 +22,14 @@ export const addTestimonial = async (req: Request, res: Response) => {
 
     await testimonialRepository.save(newTestimonial);
 
-    res.status(201).json({
-      message: "Testimonial added successfully",
-      testimonial: newTestimonial,
-    });
-  } catch (error: any) {
-    log.error("Error adding testimonial:", error.message);
-    res.status(500).json({ error: error.message });
+    successResponse(res, "Testimonial added successfully", newTestimonial);
+  } catch (error) {
+    log.error("Error adding testimonial:", error);
+    errorResponse(res, error);
   }
 };
 
-// Get testimonials (all or single)
+// **Get testimonials (all or single)**
 export const getTestimonials = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -64,7 +62,7 @@ export const getTestimonials = async (req: Request, res: Response) => {
       hasMore = page < totalPages;
     }
 
-    res.status(200).json({
+    successResponse(res, "Testimonials retrieved successfully", {
       testimonials: testimonial,
       currentDataSize,
       totalDataSize,
@@ -72,13 +70,13 @@ export const getTestimonials = async (req: Request, res: Response) => {
       currentPage: page,
       hasMore,
     });
-  } catch (error: any) {
-    log.error("Error retrieving testimonials:", error.message);
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    log.error("Error retrieving testimonials:", error);
+    errorResponse(res, error);
   }
 };
 
-// Update a testimonial
+// **Update a testimonial**
 export const updateTestimonial = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -95,16 +93,14 @@ export const updateTestimonial = async (req: Request, res: Response) => {
 
     await testimonialRepository.save(testimonial);
 
-    res
-      .status(200)
-      .json({ message: "Testimonial updated successfully", testimonial });
-  } catch (error: any) {
-    log.error("Error updating testimonial:", error.message);
-    res.status(500).json({ error: error.message });
+    successResponse(res, "Testimonial updated successfully", testimonial);
+  } catch (error) {
+    log.error("Error updating testimonial:", error);
+    errorResponse(res, error);
   }
 };
 
-// Delete a testimonial
+// **Delete a testimonial**
 export const deleteTestimonial = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -116,9 +112,9 @@ export const deleteTestimonial = async (req: Request, res: Response) => {
 
     await testimonialRepository.remove(testimonial);
 
-    res.status(200).json({ message: "Testimonial deleted successfully" });
-  } catch (error: any) {
-    log.error("Error deleting testimonial:", error.message);
-    res.status(500).json({ error: error.message });
+    successResponse(res, "Testimonial deleted successfully");
+  } catch (error) {
+    log.error("Error deleting testimonial:", error);
+    errorResponse(res, error);
   }
 };

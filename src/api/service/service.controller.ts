@@ -4,6 +4,7 @@ import log from "../../utils/logger";
 import { Services } from "./service.model";
 import fs from "fs";
 import environmentConfig from "../../config/environment.config";
+import { successResponse, errorResponse } from "../../utils/apiResponse";
 
 const serviceRepository = AppDataSource.getRepository(Services);
 
@@ -12,15 +13,12 @@ export const addService = async (req: Request, res: Response) => {
   try {
     const { title, description } = req.body;
 
-    let image = "";
-    if (req.file) {
-      image = `images/${req.file.filename}`;
-    } else {
-      throw new Error("Image is required");
-    }
-
     if (!title || !description) {
       throw new Error("Title and description are required");
+    }
+
+    if (!req.file?.filename) {
+      throw new Error("Image is required");
     }
 
     // Check if service with the same title exists
@@ -34,16 +32,14 @@ export const addService = async (req: Request, res: Response) => {
     const newService = new Services();
     newService.title = title;
     newService.description = description;
-    newService.image = image;
+    newService.image = `images/${req.file.filename}`;
 
     await serviceRepository.save(newService);
 
-    res
-      .status(201)
-      .json({ message: "Service created successfully", service: newService });
-  } catch (error: any) {
-    log.error("Error adding service:", error.message);
-    res.status(500).json({ error: error.message });
+    successResponse(res, "Service created successfully", newService);
+  } catch (error) {
+    log.error("Error adding service:", error);
+    errorResponse(res, error);
   }
 };
 
@@ -89,7 +85,7 @@ export const getService = async (req: Request, res: Response) => {
       }));
     }
 
-    res.status(200).json({
+    successResponse(res, "Services retrieved successfully", {
       services: service,
       currentDataSize,
       totalDataSize,
@@ -97,9 +93,9 @@ export const getService = async (req: Request, res: Response) => {
       currentPage: page,
       hasMore,
     });
-  } catch (error: any) {
-    log.error("Error retrieving service:", error.message);
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    log.error("Error retrieving service:", error);
+    errorResponse(res, error);
   }
 };
 
@@ -117,7 +113,7 @@ export const updateService = async (req: Request, res: Response) => {
     service.title = title ?? service.title;
     service.description = description ?? service.description;
 
-    if (req.file) {
+    if (req.file?.filename) {
       try {
         await fs.promises.unlink(`public/${service.image}`);
       } catch (error) {
@@ -128,13 +124,10 @@ export const updateService = async (req: Request, res: Response) => {
 
     const updatedService = await serviceRepository.save(service);
 
-    res.status(200).json({
-      message: "Service updated successfully",
-      service: updatedService,
-    });
-  } catch (error: any) {
-    log.error("Error updating service:", error.message);
-    res.status(500).json({ error: error.message });
+    successResponse(res, "Service updated successfully", updatedService);
+  } catch (error) {
+    log.error("Error updating service:", error);
+    errorResponse(res, error);
   }
 };
 
@@ -158,9 +151,9 @@ export const deleteService = async (req: Request, res: Response) => {
 
     await serviceRepository.remove(service);
 
-    res.status(200).json({ message: "Service deleted successfully" });
-  } catch (error: any) {
-    log.error("Error deleting service:", error.message);
-    res.status(500).json({ error: error.message });
+    successResponse(res, "Service deleted successfully");
+  } catch (error) {
+    log.error("Error deleting service:", error);
+    errorResponse(res, error);
   }
 };

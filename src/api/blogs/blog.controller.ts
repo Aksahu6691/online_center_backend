@@ -4,6 +4,7 @@ import log from "../../utils/logger";
 import { Blog } from "./blog.model";
 import fs from "fs";
 import environmentConfig from "../../config/environment.config";
+import { successResponse, errorResponse } from "../../utils/apiResponse";
 
 const blogRepository = AppDataSource.getRepository(Blog);
 
@@ -16,10 +17,7 @@ export const addBlog = async (req: Request, res: Response) => {
       throw new Error("Title, description, and author are required");
     }
 
-    let image: string;
-    if (req.file?.filename) {
-      image = `images/${req.file.filename}`;
-    } else {
+    if (!req.file?.filename) {
       throw new Error("Image is required");
     }
 
@@ -27,17 +25,15 @@ export const addBlog = async (req: Request, res: Response) => {
     newBlog.title = title;
     newBlog.description = description;
     newBlog.author = author;
-    newBlog.image = image;
+    newBlog.image = `images/${req.file.filename}`;
     newBlog.uploadedDate = new Date();
 
     await blogRepository.save(newBlog);
 
-    res
-      .status(201)
-      .json({ message: "Blog created successfully", blog: newBlog });
-  } catch (error: any) {
-    log.error("Error adding blog:", error.message);
-    res.status(500).json({ error: error.message });
+    successResponse(res, "Blog created successfully", newBlog);
+  } catch (error) {
+    log.error("Error adding blog:", error);
+    errorResponse(res, error);
   }
 };
 
@@ -56,12 +52,10 @@ export const getBlogs = async (req: Request, res: Response) => {
       relations: ["author"],
     });
 
-    // Check if blogs are being retrieved correctly
     if (!blogs.length) {
-      res.status(404).json({ error: "No blogs found" });
+      throw new Error("No blogs found");
     }
 
-    // Format blogs with author details
     const formattedBlogs = blogs.map((blog) => ({
       id: blog.id,
       title: blog.title,
@@ -80,7 +74,7 @@ export const getBlogs = async (req: Request, res: Response) => {
     const totalPages = Math.ceil(total / pageSize);
     const hasMore = pageNumber < totalPages;
 
-    res.status(200).json({
+    successResponse(res, "Blogs retrieved successfully", {
       currentDataSize: blogs.length,
       totalDataSize: total,
       totalPages,
@@ -88,9 +82,9 @@ export const getBlogs = async (req: Request, res: Response) => {
       hasMore,
       blogs: formattedBlogs,
     });
-  } catch (error: any) {
-    log.error("Error retrieving blogs:", error.message);
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    log.error("Error retrieving blogs:", error);
+    errorResponse(res, error);
   }
 };
 
@@ -104,13 +98,13 @@ export const getBlogById = async (req: Request, res: Response) => {
       throw new Error("Blog not found");
     }
 
-    res.status(200).json({
+    successResponse(res, "Blog retrieved successfully", {
       ...blog,
       image: `${environmentConfig.app.apiUrl}/${blog.image}`,
     });
-  } catch (error: any) {
-    log.error("Error retrieving blog:", error.message);
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    log.error("Error retrieving blog:", error);
+    errorResponse(res, error);
   }
 };
 
@@ -139,12 +133,10 @@ export const updateBlog = async (req: Request, res: Response) => {
 
     const updatedBlog = await blogRepository.save(blog);
 
-    res
-      .status(200)
-      .json({ message: "Blog updated successfully", blog: updatedBlog });
-  } catch (error: any) {
-    log.error("Error updating blog:", error.message);
-    res.status(500).json({ error: error.message });
+    successResponse(res, "Blog updated successfully", updatedBlog);
+  } catch (error) {
+    log.error("Error updating blog:", error);
+    errorResponse(res, error);
   }
 };
 
@@ -168,9 +160,9 @@ export const deleteBlog = async (req: Request, res: Response) => {
 
     await blogRepository.remove(blog);
 
-    res.status(200).json({ message: "Blog deleted successfully" });
-  } catch (error: any) {
-    log.error("Error deleting blog:", error.message);
-    res.status(500).json({ error: error.message });
+    successResponse(res, "Blog deleted successfully");
+  } catch (error) {
+    log.error("Error deleting blog:", error);
+    errorResponse(res, error);
   }
 };
