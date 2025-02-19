@@ -49,8 +49,9 @@ export class Users {
   @Column({ type: "timestamp", nullable: true })
   passwordUpdatedAt?: Date | null;
 
-  @OneToMany(() => Blog, (blog) => blog.author)
-  blogs!: Blog[];
+  // INFO: This part is not work in mongodbDB database
+  @OneToMany(() => Blog, (blog) => blog.author) // Establish OneToMany relationship
+  blogs!: Blog[]; // This will reference the Blog entity
 
   @BeforeInsert()
   generateId() {

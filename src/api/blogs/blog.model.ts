@@ -4,6 +4,7 @@ import {
   ObjectIdColumn,
   BeforeInsert,
   ManyToOne,
+  JoinColumn,
 } from "typeorm";
 import { ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
@@ -29,8 +30,13 @@ export class Blog {
   @Column({ type: "timestamp" })
   uploadedDate!: Date;
 
-  @ManyToOne(() => Users, (user) => user.id, { nullable: false })
-  author!: Users; // Reference the Users entity
+  @Column()
+  authorId!: string;
+
+  // INFO: This part is not work in mongodbDB database
+  @ManyToOne(() => Users, (user) => user.blogs) // Establish ManyToOne relationship
+  @JoinColumn({ name: "authorId", referencedColumnName: "id" }) // Join on authorId and user.id
+  author!: Users; // This will reference the Users entity
 
   @BeforeInsert()
   generateId() {

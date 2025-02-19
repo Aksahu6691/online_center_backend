@@ -5,16 +5,19 @@ import { Blog } from "./blog.model";
 import fs from "fs";
 import environmentConfig from "../../config/environment.config";
 import { successResponse, errorResponse } from "../../utils/apiResponse";
+import { Users } from "../user/user.model";
 
 const blogRepository = AppDataSource.getRepository(Blog);
+const userRepository = AppDataSource.getRepository(Users);
+const blogMongoRepository = AppDataSource.getMongoRepository(Blog);
 
 // ✅ Add Blog
 export const addBlog = async (req: Request, res: Response) => {
   try {
-    const { title, description, author } = req.body;
+    const { title, description, authorId } = req.body;
 
-    if (!title || !description || !author) {
-      throw new Error("Title, description, and author are required");
+    if (!title || !description || !authorId) {
+      throw new Error("Title, description, and authorId are required");
     }
 
     if (!req.file?.filename) {
@@ -24,7 +27,7 @@ export const addBlog = async (req: Request, res: Response) => {
     const newBlog = new Blog();
     newBlog.title = title;
     newBlog.description = description;
-    newBlog.author = author;
+    newBlog.authorId = authorId;
     newBlog.image = `images/${req.file.filename}`;
     newBlog.uploadedDate = new Date();
 
@@ -44,43 +47,51 @@ export const getBlogs = async (req: Request, res: Response) => {
     const pageNumber = parseInt(page as string) || 1;
     const pageSize = parseInt(limit as string) || 10;
 
-    // Fetch blogs with author relation
-    const [blogs, total] = await blogRepository.findAndCount({
-      skip: (pageNumber - 1) * pageSize,
-      take: pageSize,
-      order: { uploadedDate: "DESC" },
-      relations: ["author"],
-    });
+    // Aggregation pipeline to join blogs with authors
+    const blogs = await blogMongoRepository
+      .aggregate([
+        {
+          $lookup: {
+            from: "users", // Collection name in MongoDB
+            localField: "authorId",
+            foreignField: "id",
+            as: "author",
+          },
+        },
+        {
+          $unwind: {
+            path: "$author",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            id: 1,
+            title: 1,
+            description: 1,
+            image: 1,
+            uploadedDate: 1,
+            "author.id": 1,
+            "author.name": 1,
+            "author.designation": 1,
+          },
+        },
+        { $sort: { uploadedDate: -1 } },
+        { $skip: (pageNumber - 1) * pageSize },
+        { $limit: pageSize },
+      ])
+      .toArray(); // Convert aggregation result to an array
 
     if (!blogs.length) {
       throw new Error("No blogs found");
     }
 
-    const formattedBlogs = blogs.map((blog) => ({
-      id: blog.id,
-      title: blog.title,
-      description: blog.description,
-      image: `${environmentConfig.app.apiUrl}/${blog.image}`,
-      uploadedDate: blog.uploadedDate,
-      author: blog.author
-        ? {
-            id: blog.author.id,
-            name: blog.author.name,
-            designation: blog.author.designation,
-          }
-        : null,
-    }));
-
-    const totalPages = Math.ceil(total / pageSize);
-    const hasMore = pageNumber < totalPages;
-
     successResponse(res, "Blogs retrieved successfully", {
       currentDataSize: blogs.length,
-      totalDataSize: total,
-      totalPages,
+      totalPages: Math.ceil((await blogRepository.count()) / pageSize),
       currentPage: pageNumber,
-      hasMore,
-      blogs: formattedBlogs,
+      hasMore: pageNumber * pageSize < (await blogRepository.count()),
+      blogs,
     });
   } catch (error) {
     log.error("Error retrieving blogs:", error);
@@ -93,10 +104,27 @@ export const getBlogById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const blog = await blogRepository.findOne({ where: { id } });
+    // Find the blog by ID
+    const blog = await blogRepository.findOne({
+      where: { id },
+    });
+
     if (!blog) {
       throw new Error("Blog not found");
     }
+
+    // Find the author of the blog
+    const author = await userRepository.findOne({
+      where: { id: blog.authorId },
+      select: ["id", "name", "designation"],
+    });
+
+    if (!author) {
+      throw new Error("Author not found");
+    }
+
+    // Attach the author to the blog object
+    blog.author = author;
 
     successResponse(res, "Blog retrieved successfully", {
       ...blog,
