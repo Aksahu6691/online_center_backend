@@ -86,12 +86,20 @@ export const getBlogs = async (req: Request, res: Response) => {
       throw new Error("No blogs found");
     }
 
+    // **Modify blogs to include the full image URL**
+    const formattedBlogs = blogs.map((blog) => ({
+      ...blog,
+      image: blog.image
+        ? `${environmentConfig.app.apiUrl}/${blog.image}`
+        : null,
+    }));
+
     successResponse(res, "Blogs retrieved successfully", {
       currentDataSize: blogs.length,
       totalPages: Math.ceil((await blogRepository.count()) / pageSize),
       currentPage: pageNumber,
       hasMore: pageNumber * pageSize < (await blogRepository.count()),
-      blogs,
+      blogs: formattedBlogs,
     });
   } catch (error) {
     log.error("Error retrieving blogs:", error);
